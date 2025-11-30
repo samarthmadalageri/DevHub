@@ -43,22 +43,14 @@ BookingSchema.pre("save", async function () {
 
   // Only validate eventId if it's new or modified
   if (booking.isModified("eventId") || booking.isNew) {
-    try {
-      const eventExists = await Event.findById(booking.eventId).select("_id");
+    const eventExists = await Event.findById(booking.eventId).select("_id").catch(() => null);
 
-      if (!eventExists) {
-        const error = new Error(
-          `Event with ID ${booking.eventId} does not exist`
-        );
-        error.name = "ValidationError";
-        throw error;
-      }
-    } catch {
-      const validationError = new Error(
-        "Invalid event ID format or database error"
+    if (!eventExists) {
+      const error = new Error(
+        `Event with ID ${booking.eventId} does not exist or is invalid`
       );
-      validationError.name = "ValidationError";
-      throw validationError;
+      error.name = "ValidationError";
+      throw error;
     }
   }
 });
